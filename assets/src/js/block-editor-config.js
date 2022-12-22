@@ -8,11 +8,13 @@ import {
 	unregisterBlockVariation,
 	unregisterBlockStyle,
 	registerBlockStyle,
-	getBlockSupport,
 } from '@wordpress/blocks';
 import lodash from 'lodash';
 import { __ } from '@wordpress/i18n';
+import { select } from '@wordpress/data';
+import { unregisterFormatType } from '@wordpress/rich-text';
 
+const editorConfig = blockEditorConfig;
 const blocksConfig = blockEditorConfig.blocks;
 const allowedBlockNames = blockEditorConfig.blocks.map(
 	( block ) => block.name
@@ -63,7 +65,6 @@ const handleStyles = ( block ) => {
  * Register/unregister variations
  *
  * @param {*} block
- * @returns
  */
 const handleVariations = ( block ) => {
 	const registeredBlock = getBlockType( block.name );
@@ -116,4 +117,15 @@ domReady( () => {
 	blocksConfig
 		.filter( ( block ) => lodash.has( block, [ 'variations' ] ) )
 		.forEach( handleVariations );
+
+	if ( lodash.has( editorConfig, [ 'formats' ] ) ) {
+		const registeredFormats = select( 'core/rich-text' ).getFormatTypes();
+		registeredFormats
+			.filter(
+				( format ) => ! editorConfig.formats.includes( format.name )
+			)
+			.forEach( ( format ) => {
+				unregisterFormatType( format.name );
+			} );
+	}
 } );
