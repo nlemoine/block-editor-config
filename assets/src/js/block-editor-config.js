@@ -14,12 +14,6 @@ import { __ } from '@wordpress/i18n';
 import { select } from '@wordpress/data';
 import { unregisterFormatType } from '@wordpress/rich-text';
 
-const editorConfig = blockEditorConfig;
-const blocksConfig = blockEditorConfig.blocks;
-const allowedBlockNames = blockEditorConfig.blocks.map(
-	( block ) => block.name
-);
-
 /**
  * Register/unregister styles
  *
@@ -103,29 +97,44 @@ const handleVariations = ( block ) => {
 };
 
 domReady( () => {
+	if ( lodash.isUndefined( blockEditorConfig ) ) {
+		return;
+	}
+
+	const editorConfig = blockEditorConfig;
+	const blocksConfig = lodash.has( blockEditorConfig, 'blocks' )
+		? blockEditorConfig.blocks
+		: [];
+	const allowedBlockNames = blocksConfig.map( ( block ) => block.name );
+
 	// Remove non whitelisted blocks
-	getBlockTypes()
-		.filter(
-			( blockType ) => ! allowedBlockNames.includes( blockType.name )
-		)
-		.forEach( ( blockType ) => unregisterBlockType( blockType.name ) );
-
-	blocksConfig
-		.filter( ( block ) => lodash.has( block, [ 'styles' ] ) )
-		.forEach( handleStyles );
-
-	blocksConfig
-		.filter( ( block ) => lodash.has( block, [ 'variations' ] ) )
-		.forEach( handleVariations );
-
-	if ( lodash.has( editorConfig, [ 'formats' ] ) ) {
-		const registeredFormats = select( 'core/rich-text' ).getFormatTypes();
-		registeredFormats
+	if ( allowedBlockNames.length ) {
+		getBlockTypes()
 			.filter(
-				( format ) => ! editorConfig.formats.includes( format.name )
+				( blockType ) => ! allowedBlockNames.includes( blockType.name )
 			)
-			.forEach( ( format ) => {
-				unregisterFormatType( format.name );
-			} );
+			.forEach( ( blockType ) => unregisterBlockType( blockType.name ) );
+	}
+
+	if ( blocksConfig.length ) {
+		blocksConfig
+			.filter( ( block ) => lodash.has( block, [ 'styles' ] ) )
+			.forEach( handleStyles );
+
+		blocksConfig
+			.filter( ( block ) => lodash.has( block, [ 'variations' ] ) )
+			.forEach( handleVariations );
+
+		if ( lodash.has( editorConfig, [ 'formats' ] ) ) {
+			const registeredFormats =
+				select( 'core/rich-text' ).getFormatTypes();
+			registeredFormats
+				.filter(
+					( format ) => ! editorConfig.formats.includes( format.name )
+				)
+				.forEach( ( format ) => {
+					unregisterFormatType( format.name );
+				} );
+		}
 	}
 } );

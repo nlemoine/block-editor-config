@@ -16,6 +16,8 @@
 
 namespace n5s\BlockEditorConfig;
 
+const SCRIPT_HANDLE = 'block-editor-config';
+
 /**
  * Get versioned asset name
  *
@@ -88,12 +90,12 @@ function add_block_config_script(): void
 	}
 
     \wp_enqueue_script(
-        'block-editor-config',
+        SCRIPT_HANDLE,
         $asset_url,
         $dependencies,
         null
     );
-	wp_add_inline_script( 'block-editor-config', 'var blockEditorConfig = ' . json_encode($config), 'before' );
+	wp_add_inline_script( SCRIPT_HANDLE, 'const blockEditorConfig = ' . json_encode($config), 'before' );
 }
 \add_action('enqueue_block_editor_assets', __NAMESPACE__ . '\\add_block_config_script');
 
